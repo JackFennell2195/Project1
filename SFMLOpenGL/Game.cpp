@@ -407,10 +407,10 @@ void Game::render()
 	int x = Mouse::getPosition(window).x;
 	int y = Mouse::getPosition(window).y;
 
-	string hud = "Heads Up Display ["
+	string hud = "Score ["
 		+ string(toString(x))
-		+ "]["
-		+ string(toString(y))
+		+ "] Lives ["
+		+ "3"
 		+ "]";
 
 	Text text(hud, font);
