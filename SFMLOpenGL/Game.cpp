@@ -1,5 +1,6 @@
 #include <Game.h>
 #include <Cube.h>
+#include "PlayerCube.h"
 #include <Easing.h>
 
 // Helper to convert Number to String for HUD
@@ -22,7 +23,7 @@ GLint	positionID,	// Position ID
 		colorID,	// Color ID
 		textureID,	// Texture ID
 		uvID,		// UV ID
-		mvpID,		// Model View Projection ID
+		mvpID[4],		// Model View Projection ID
 		x_offsetID, // X offset ID
 		y_offsetID,	// Y offset ID
 		z_offsetID;	// Z offset ID
@@ -39,8 +40,8 @@ int comp_count;					// Component of texture
 
 unsigned char* img_data;		// image data
 
-mat4 mvp, projection, 
-		view, model;			// Model View Projection
+mat4 mvp, mvp1, mvp2, mvp3, projection,
+		view, model, model1, model2, model3;			// Model View Projection
 
 Font font;						// Game font
 
@@ -79,7 +80,6 @@ void Game::run()
 #if (DEBUG >= 2)
 		DEBUG_MSG("Game running...");
 #endif
-
 		while (window.pollEvent(event))
 		{
 			if (event.type == Event::Closed)
@@ -95,7 +95,7 @@ void Game::run()
 					animate = true;
 					if (rotation < 0)
 						rotation *= -1; // Set Positive
-					animation = glm::vec3(0, 1, 0); //Rotate Y
+					animation = glm::vec3(0, -1, 0); //Rotate Y
 				}
 			}
 
@@ -109,52 +109,6 @@ void Game::run()
 						rotation *= -1; // Set Negative
 					animation = glm::vec3(0, 1, 0); //Rotate Y
 				}
-
-				// https://www.sfml-dev.org/documentation/2.0/classsf_1_1Clock.php
-				// https://github.com/acron0/Easings
-				// http://robotacid.com/documents/code/Easing.cs
-				// http://st33d.tumblr.com/post/94243475686/easing-equations-for-unity-c
-				// http://easings.net/
-				// http://upshots.org/actionscript/jsas-understanding-easing
-				// https://www.kirupa.com/html5/animating_with_easing_functions_in_javascript.htm
-				// https://medium.com/motion-in-interaction/animation-principles-in-ui-design-understanding-easing-bea05243fe3#.svh4gczav
-				// http://thednp.github.io/kute.js/easing.html
-				// http://gizma.com/easing/#quad1
-				// https://github.com/warrenm/AHEasing
-
-				// VR
-				// https://www.sfml-dev.org/documentation/2.4.2/classsf_1_1Sensor.php
-				// http://en.sfml-dev.org/forums/index.php?topic=9412.msg65594
-				// https://github.com/SFML/SFML/wiki/Tutorial:-Building-SFML-for-Android-on-Windows
-				// https://github.com/SFML/SFML/wiki/Tutorial:-Building-SFML-for-Android
-				// https://www.youtube.com/watch?v=n_JSi6ihDFs
-				// http://en.sfml-dev.org/forums/index.php?topic=8010.0
-				// 
-
-				
-				// Set Model Rotation
-				// t = time, b = startvalue, c = change in value, d = duration:
-
-				time = clock.getElapsedTime();
-				std::cout << time.asSeconds() << std::endl;
-				float original = 0.001f;
-				float destination = 0.05f;
-
-				float factor, temp;
-
-				for (int t = 0; t < 5.0f; t++)
-				{
-				factor = gpp::Easing::easeIn(t, original, 0.00001f, 5.0f);
-				cout << "Factor : " << factor << endl;
-				}
-
-
-				factor = gpp::Easing::easeIn(time.asMilliseconds(), original, 0.00001f, 5.0f);
-				cout << "Factor : " << factor << endl;
-				temp = original + ((destination - original) * factor);
-				cout << "Temp : " << factor << endl;
-				model = rotate(model, temp, glm::vec3(0, 1, 0)); // Rotate
-				
 			}
 
 			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
@@ -177,8 +131,15 @@ void Game::run()
 				animate = false;
 			}
 		}
+		
 		update();
 		render();
+
+		if (lives <= 0)
+		{
+			window.close();
+			isRunning = false;
+		}
 	}
 
 #if (DEBUG >= 2)
@@ -210,13 +171,15 @@ void Game::initialize()
 
 	// Vertices (3) x,y,z , Colors (4) RGBA, UV/ST (2)
 	glBufferData(GL_ARRAY_BUFFER, ((3 * VERTICES) + (4 * COLORS) + (2 * UVS)) * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, ((3 * PLAYER_CUBE_VERTICES) + (4 * PLAYER_CUBE_COLORS) + (2 * PLAYER_CUBE_UVS)) * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
+
 
 	glGenBuffers(1, &vib); //Generate Vertex Index Buffer
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vib);
 
 	// Indices to be drawn
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * INDICES * sizeof(GLuint), indices, GL_STATIC_DRAW);
-
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * PLAYER_CUBE_INDICES * sizeof(GLuint), PlayerCubeIndices, GL_STATIC_DRAW);
 	// NOTE: uniforms values must be used within Shader so that they 
 	// can be retreived
 	const char* vs_src =
@@ -365,7 +328,24 @@ void Game::initialize()
 	model = mat4(
 		1.0f					// Identity Matrix
 		);
+	model = translate(model, glm::vec3(0.0f, -1.0f, -4.0f));
 
+	model1 = mat4(
+		1.0f					// Identity Matrix
+	);
+	model1 = translate(model1, glm::vec3(-6.0f, -1.0f, -4.0f));
+
+	model2 = mat4(
+		1.0f					// Identity Matrix
+	);
+	model2 = translate(model2, glm::vec3(6.0f, -1.0f, -4.0f));
+
+	model3 = mat4(
+		1.0f
+	);
+	model3 = translate(model3, glm::vec3(0.0f, -1.0f, 5.0f));
+
+	Game::direction = { 0.0f, -1.0f, 5.0f };
 	// Enable Depth Test
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -383,7 +363,27 @@ void Game::update()
 	// Update Model View Projection
 	// For mutiple objects (cubes) create multiple models
 	// To alter Camera modify view & projection
+
+	//move player cube left and right
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+	{
+		model3 = translate(model3, glm::vec3(-0.005, 0, 0)); // Rotate
+		direction = { direction.ReturnX() - 0.005, direction.ReturnY() ,direction.ReturnZ() };
+	}
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+	{
+		model3 = translate(model3, glm::vec3(0.005, 0, 0)); // Rotate
+		direction = { direction.ReturnX() + 0.005, direction.ReturnY() ,direction.ReturnZ() };
+	}
+
 	mvp = projection * view * model;
+	mvp1 = projection * view * model1;
+	mvp2 = projection * view * model2;
+	mvp3 = projection * view * model3;
+
+	model = rotate(model, -0.001f, glm::vec3(0, -1, 0)); // Rotate
+	model1 = rotate(model1, -0.001f, glm::vec3(0, -1, 0)); // Rotate
+	model2 = rotate(model2, -0.001f, glm::vec3(0, -1, 0)); // Rotate
 
 	DEBUG_MSG(model[0].x);
 	DEBUG_MSG(model[0].y);
@@ -407,10 +407,10 @@ void Game::render()
 	int x = Mouse::getPosition(window).x;
 	int y = Mouse::getPosition(window).y;
 
-	string hud = "Score ["
-		+ string(toString(x))
-		+ "] Lives ["
-		+ "3"
+	string hud = "Lives: ["
+		+ string(toString(lives))
+		+ "]  Score: ["
+		+ string(toString(score))
 		+ "]";
 
 	Text text(hud, font);
@@ -445,9 +445,19 @@ void Game::render()
 
 	textureID = glGetUniformLocation(progID, "f_texture");
 	if (textureID < 0) { DEBUG_MSG("textureID not found"); }
+	
+	mvpID[0] = glGetUniformLocation(progID, "sv_mvp");
+	if (mvpID[0] < 0) { DEBUG_MSG("mvpID not found"); }
 
-	mvpID = glGetUniformLocation(progID, "sv_mvp");
-	if (mvpID < 0) { DEBUG_MSG("mvpID not found"); }
+	mvpID[1] = glGetUniformLocation(progID, "sv_mvp");
+	if (mvpID[1] < 0) { DEBUG_MSG("mvpID not found"); }
+
+	mvpID[2] = glGetUniformLocation(progID, "sv_mvp");
+	if (mvpID[2] < 0) { DEBUG_MSG("mvpID not found"); }
+
+	mvpID[3] = glGetUniformLocation(progID, "sv_mvp");
+	if (mvpID[3] < 0) { DEBUG_MSG("mvpID not found"); }
+
 
 	x_offsetID = glGetUniformLocation(progID, "sv_x_offset");
 	if (x_offsetID < 0) { DEBUG_MSG("x_offsetID not found"); }
@@ -459,12 +469,12 @@ void Game::render()
 	if (z_offsetID < 0) { DEBUG_MSG("z_offsetID not found"); };
 
 	// VBO Data....vertices, colors and UV's appended
-	glBufferSubData(GL_ARRAY_BUFFER, 0 * VERTICES * sizeof(GLfloat), 3 * VERTICES * sizeof(GLfloat), vertices);
-	glBufferSubData(GL_ARRAY_BUFFER, 3 * VERTICES * sizeof(GLfloat), 4 * COLORS * sizeof(GLfloat), colors);
+	glBufferSubData(GL_ARRAY_BUFFER, 0 * VERTICES * sizeof(GLfloat), 3 * VERTICES * sizeof(GLfloat), cube1Vertices);
+	glBufferSubData(GL_ARRAY_BUFFER, 3 * VERTICES * sizeof(GLfloat), 4 * COLORS * sizeof(GLfloat), cube1Colors);
 	glBufferSubData(GL_ARRAY_BUFFER, ((3 * VERTICES) + (4 * COLORS)) * sizeof(GLfloat), 2 * UVS * sizeof(GLfloat), uvs);
 
 	// Send transformation to shader mvp uniform [0][0] is start of array
-	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
+	glUniformMatrix4fv(mvpID[0], 1, GL_FALSE, &mvp[0][0]);
 
 	// Set Active Texture .... 32 GL_TEXTURE0 .... GL_TEXTURE31
 	glActiveTexture(GL_TEXTURE0);
@@ -489,6 +499,27 @@ void Game::render()
 
 	// Draw Element Arrays
 	glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
+	
+	glBufferSubData(GL_ARRAY_BUFFER, 0 * VERTICES * sizeof(GLfloat), 3 * VERTICES * sizeof(GLfloat), cube2Vertices);
+	glBufferSubData(GL_ARRAY_BUFFER, 3 * VERTICES * sizeof(GLfloat), 4 * COLORS * sizeof(GLfloat), cube2Colors);
+	glBufferSubData(GL_ARRAY_BUFFER, ((3 * VERTICES) + (4 * COLORS)) * sizeof(GLfloat), 2 * UVS * sizeof(GLfloat), uvs);
+	glUniformMatrix4fv(mvpID[1], 1, GL_FALSE, &mvp1[0][0]);
+	glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
+
+
+
+	glBufferSubData(GL_ARRAY_BUFFER, 0 * VERTICES * sizeof(GLfloat), 3 * VERTICES * sizeof(GLfloat), cube3Vertices);
+	glBufferSubData(GL_ARRAY_BUFFER, 3 * VERTICES * sizeof(GLfloat), 4 * COLORS * sizeof(GLfloat), cube3Colors);
+	glBufferSubData(GL_ARRAY_BUFFER, ((3 * VERTICES) + (4 * COLORS)) * sizeof(GLfloat), 2 * UVS * sizeof(GLfloat), uvs);
+	glUniformMatrix4fv(mvpID[2], 1, GL_FALSE, &mvp2[0][0]);
+	glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
+
+	glBufferSubData(GL_ARRAY_BUFFER, 0 * PLAYER_CUBE_VERTICES * sizeof(GLfloat), 3 * PLAYER_CUBE_VERTICES * sizeof(GLfloat), PlayerCubeVertices);
+	glBufferSubData(GL_ARRAY_BUFFER, 3 * PLAYER_CUBE_VERTICES * sizeof(GLfloat), 4 * PLAYER_CUBE_COLORS * sizeof(GLfloat), PlayerCubeColors);
+	glBufferSubData(GL_ARRAY_BUFFER, ((3 * PLAYER_CUBE_VERTICES) + (4 * PLAYER_CUBE_COLORS)) * sizeof(GLfloat), 2 * PLAYER_CUBE_UVS * sizeof(GLfloat), uvs);
+	glUniformMatrix4fv(mvpID[3], 1, GL_FALSE, &mvp3[0][0]);
+	glDrawElements(GL_TRIANGLES, 3 * PLAYER_CUBE_INDICES, GL_UNSIGNED_INT, NULL);
+
 	window.display();
 
 	// Disable Arrays

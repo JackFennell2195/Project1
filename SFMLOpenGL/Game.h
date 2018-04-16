@@ -1,6 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include "Vector3.h"
 #include <string>
 #include <sstream>
 
@@ -43,6 +44,10 @@ private:
 	void update();
 	void render();
 	void unload();
+	int score = 0;
+	int lives = 3;
+
+	gpp::Vector3 direction;
 };
 
 #endif  // ! GAME_H
