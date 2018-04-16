@@ -87,41 +87,41 @@ void Game::run()
 				isRunning = false;
 			}
 
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-			{
-				// Set Model Rotation
-				if (!animate)
-				{
-					animate = true;
-					if (rotation < 0)
-						rotation *= -1; // Set Positive
-					animation = glm::vec3(0, -1, 0); //Rotate Y
-				}
-			}
+			//else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+			//{
+			//	// Set Model Rotation
+			//	if (!animate)
+			//	{
+			//		animate = true;
+			//		if (rotation < 0)
+			//			rotation *= -1; // Set Positive
+			//		animation = glm::vec3(0, -1, 0); //Rotate Y
+			//	}
+			//}
 
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-			{
-				// Set Model Rotation
-				if (!animate)
-				{
-					animate = true;
-					if (rotation >= 0)
-						rotation *= -1; // Set Negative
-					animation = glm::vec3(0, 1, 0); //Rotate Y
-				}
-			}
+			//else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+			//{
+			//	// Set Model Rotation
+			//	if (!animate)
+			//	{
+			//		animate = true;
+			//		if (rotation >= 0)
+			//			rotation *= -1; // Set Negative
+			//		animation = glm::vec3(0, 1, 0); //Rotate Y
+			//	}
+			//}
 
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-			{
-				// Set Model Rotation
-				model = rotate(model, -0.01f, glm::vec3(1, 0, 0)); // Rotate
-			}
+			//else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+			//{
+			//	// Set Model Rotation
+			//	model = rotate(model, -0.01f, glm::vec3(1, 0, 0)); // Rotate
+			//}
 
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-			{
-				// Set Model Rotation
-				model = rotate(model, 0.01f, glm::vec3(1, 0, 0)); // Rotate
-			}
+			//else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+			//{
+			//	// Set Model Rotation
+			//	model = rotate(model, 0.01f, glm::vec3(1, 0, 0)); // Rotate
+			//}
 
 			if (animate)
 			{
